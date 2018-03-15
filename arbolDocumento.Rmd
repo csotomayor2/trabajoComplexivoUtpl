@@ -1,0 +1,154 @@
+---
+title: "arbolDocument"
+author: "Carlos Sotomayor"
+date: "2 de enero de 2018"
+output: 
+   word_document: default
+   html_document: default
+---
+
+```{r setup, include=FALSE}
+base<-read.csv("cambridgeSchool2.csv")
+library(dplyr)
+
+
+n_base<-10128
+base2<-sample_n(base,size=n_base, replace=TRUE)
+
+base2$conf<-sample(c(1,0),replace = T,prob = c(0.3,0.7),size = 10128)
+
+b1<-filter(base2,conf==0)
+b2<-filter(base2,conf==1)
+b2$Rendimiento1<-b2$Rendimiento
+b2$Rendimiento[b2$Rendimiento1=="Malo"]<-"Muy Bueno"
+b2$Rendimiento[b2$Rendimiento1=="Muy Bueno"]<-"Malo"
+b2$Rendimiento[b2$Rendimiento1=="Regular"]<-"Malo"
+
+b2$Rendimiento1<-NULL
+
+```
+Comentario
+
+```{r , echo=TRUE}
+library(rpart)      
+library(rpart.plot)
+```
+
+Comentario
+
+```{r, echo=TRUE}
+datos<- base2[,c(3,4,5,6,7,12,13,14,15,16,23,24,25,26,27,28,29,35)]      
+names(datos)
+```
+
+Comentario
+
+```{r , echo=TRUE}
+ind        <- sample(2,nrow(datos), replace=TRUE, prob=c(0.8, 0.2)) 
+trainData  <- datos[ind==1, ] # Entrenamiento
+testData   <- datos[ind==2, ] # Test
+```
+
+Comentario
+
+```{r , echo=TRUE}
+ArbolRpart <- rpart(Rendimiento ~ ., method = "class", data = trainData)
+```
+
+Comentario
+
+```{r , echo=TRUE}
+print(ArbolRpart)                         
+rpart.plot(ArbolRpart,extra=4)  # extra=4:probabilidad de observaciones por clase
+```
+
+Comentario
+
+```{r , echo=TRUE}
+printcp(ArbolRpart)             # estadísticas de resultados
+plotcp(ArbolRpart)              # evolución del error a medida que se incrementan los nodos
+```
+
+Comentario
+
+```{r , echo=TRUE}
+pArbolRpart<- prune(ArbolRpart, cp= ArbolRpart$cptable[which.min(ArbolRpart$cptable[,"xerror"]),"CP"])
+pArbolRpart<- prune(ArbolRpart, cp= 0.011111)
+printcp(pArbolRpart)
+```
+Comentario
+
+```{r , echo=TRUE}
+testPredRpart <- predict(ArbolRpart, newdata = testData, type = "class")
+```
+
+Comentario
+
+```{r , echo=TRUE}
+table(testPredRpart, testData$Rendimiento)
+```
+
+Comentario
+
+```{r , echo=TRUE}
+sum(testPredRpart == testData$Rendimiento) / length(testData$Rendimiento)*100
+```
+
+Comentario
+
+```{r , echo=TRUE}
+datos<- base2[,c(3,4,6,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,35)]
+names(datos)
+```
+Comentario
+
+```{r , echo=TRUE}
+ind        <- sample(2,nrow(datos), replace=TRUE, prob=c(0.8, 0.2)) 
+trainData  <- datos[ind==1, ] # Entrenamiento
+testData   <- datos[ind==2, ] # Test
+```
+
+Comentario
+
+```{r , echo=TRUE}
+ArbolRpart <- rpart(Rendimiento ~ ., method = "class", data = trainData)
+```
+
+Comentario
+
+```{r , echo=TRUE}
+print(ArbolRpart)                         
+rpart.plot(ArbolRpart,extra=4)  # extra=4:probabilidad de observaciones por clase
+```
+
+Comentario
+
+```{r , echo=TRUE}
+printcp(ArbolRpart)             # estadísticas de resultados
+plotcp(ArbolRpart)              # evolución del error a medida que se incrementan los nodos
+```
+
+Comentario
+
+```{r , echo=TRUE}
+pArbolRpart<- prune(ArbolRpart, cp= ArbolRpart$cptable[which.min(ArbolRpart$cptable[,"xerror"]),"CP"])
+pArbolRpart<- prune(ArbolRpart, cp= 0.011111)
+printcp(pArbolRpart)
+```
+Comentario
+
+```{r , echo=TRUE}
+testPredRpart <- predict(ArbolRpart, newdata = testData, type = "class")
+```
+
+Comentario
+
+```{r , echo=TRUE}
+table(testPredRpart, testData$Rendimiento)
+```
+
+Comentario
+
+```{r , echo=TRUE}
+sum(testPredRpart == testData$Rendimiento) / length(testData$Rendimiento)*100
+```

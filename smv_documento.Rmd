@@ -1,0 +1,139 @@
+---
+title: "msv_document"
+author: "Carlos Sotomayor"
+date: "29 de diciembre de 2017"
+output: 
+   word_document: default
+   html_document: default
+---
+```{r setup, include=FALSE}
+base<-read.csv("cambridgeSchool2.csv")
+library(dplyr)
+
+
+n_base<-10128
+base2<-sample_n(base,size=n_base, replace=TRUE)
+
+base2$conf<-sample(c(1,0),replace = T,prob = c(0.3,0.7),size = 10128)
+
+b1<-filter(base2,conf==0)
+b2<-filter(base2,conf==1)
+b2$Rendimiento1<-b2$Rendimiento
+b2$Rendimiento[b2$Rendimiento1=="Malo"]<-"Muy Bueno"
+b2$Rendimiento[b2$Rendimiento1=="Muy Bueno"]<-"Malo"
+b2$Rendimiento[b2$Rendimiento1=="Regular"]<-"Malo"
+
+b2$Rendimiento1<-NULL
+
+```
+
+Comentario
+
+```{r, echo=TRUE}
+cambridge <- base2[,c(3,4,16,25,26,5,28,27,12,13,7,14,23,6,15,29,24,31,32,35)]
+str(cambridge)
+```
+
+Comentario
+
+
+```{r, echo=TRUE}
+set.seed(123)
+train_sample <- sample(10128, 3000)
+str(train_sample)
+```
+
+Comentario
+
+```{r, echo=TRUE}
+cambridge_train <- cambridge[train_sample, ]
+cambridge_test  <- cambridge[-train_sample, ]
+```
+
+Comentario
+
+```{r, echo=TRUE}
+prop.table(table(cambridge_train$Rendimiento))
+prop.table(table(cambridge_test$Rendimiento))
+```
+
+Comentario Paso3
+
+```{r, echo=TRUE}
+library(kernlab)
+cambridge_classifier <- ksvm(Rendimiento ~ ., data = cambridge_train,kernel = "vanilladot")
+```
+
+Comentario
+```{r,echo=TRUE}
+cambridge_classifier
+```
+
+
+Comentario Paso4
+
+```{r, echo=TRUE}
+cambridge_predictions <- predict(cambridge_classifier, cambridge_test)
+head(cambridge_predictions)
+table(cambridge_predictions, cambridge_test$Rendimiento)
+```
+
+Comentario
+
+```{r, echo=TRUE}
+agreement <-cambridge_predictions == cambridge_test$Rendimiento
+table(agreement)
+prop.table(table(agreement))
+```
+
+Comentario Pas2
+
+```{r}
+muestra<-runif(10128)
+training<-filter(base2,muestra<=0.8)
+test<-filter(base2,muestra>0.8)
+```
+
+Comentario
+
+```{r}
+library(e1071)
+model_svm <- svm(Rendimiento~sexo+edad+FallosClase+relacionFamiliar
+                 +tiempoLibre+zona+alcholDiasLab+salidasAmigos
+                 +razon+Representante+EstadoPadres+tiempoTrayecto
+                 +Internet+tamFamilia+tiempoEstudio+alcholFinSemana
+                 +relacionSentimental+ausencias+X1Q, data=training,method="C-classification",kernel="radial")
+```
+
+Comentario
+
+```{r}
+summary(model_svm)
+```
+
+Comentario
+
+```{r}
+predic<-data.frame(predict(model_svm,test))
+```
+
+Comentario
+
+```{r}
+muestra<-cbind(test,predic=predic)
+```
+
+Comentario
+
+```{r}
+mc<-table(muestra$Rendimiento,muestra$predict.model_svm..test.)
+mc
+```
+
+Comentario
+
+```{r}
+acierto<- (sum(diag(mc)))/(sum(mc))
+acierto
+```
+
